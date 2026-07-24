@@ -1,0 +1,10 @@
+from nltk.stem import PorterStemmer
+
+ps = PorterStemmer()
+
+words = ["caresses", "ponies", "ties", "caress", "cats",
+         "running", "happiness", "relational"]
+
+print("Word\t\tStem")
+for word in words:
+    print(word, "\t", ps.stem(word))
