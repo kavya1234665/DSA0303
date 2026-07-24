@@ -1,0 +1,98 @@
+pip install nltk matplotlib
+# Import libraries
+import nltk
+from nltk import word_tokenize
+from nltk.util import ngrams
+from collections import Counter
+import matplotlib.pyplot as plt
+
+# Download tokenizer
+nltk.download('punkt')
+
+# -----------------------------
+# Input Text (Corpus)
+# -----------------------------
+text = """
+John works at Google.
+Mary works at Microsoft.
+John works in Chennai.
+Mary lives in Chennai.
+John lives in India.
+"""
+
+# -----------------------------
+# 1. Tokenize Text
+# -----------------------------
+tokens = word_tokenize(text)
+
+# Remove punctuation
+tokens = [word for word in tokens if word.isalpha()]
+
+print("Tokens:")
+print(tokens)
+
+# -----------------------------
+# 2. Build Corpus
+# -----------------------------
+corpus = tokens
+
+print("\nCorpus:")
+print(corpus)
+
+# -----------------------------
+# 3. Count Word Frequencies
+# -----------------------------
+word_freq = Counter(corpus)
+
+print("\nWord Frequency:")
+for word, count in word_freq.items():
+    print(word, ":", count)
+
+# -----------------------------
+# 4. Generate Unigram Frequency
+# -----------------------------
+unigrams = Counter(corpus)
+
+print("\nUnigram Frequency:")
+for word, count in unigrams.items():
+    print(word, ":", count)
+
+# -----------------------------
+# 5. Generate Bigram Frequency
+# -----------------------------
+bigrams = list(ngrams(corpus, 2))
+bigram_freq = Counter(bigrams)
+
+print("\nBigram Frequency:")
+for bg, count in bigram_freq.items():
+    print(bg, ":", count)
+
+# -----------------------------
+# 6. Compute Probabilities
+# -----------------------------
+total_words = len(corpus)
+
+print("\nUnigram Probabilities:")
+for word in unigrams:
+    print(f"P({word}) = {unigrams[word]/total_words:.3f}")
+
+print("\nBigram Probabilities:")
+
+for bg in bigram_freq:
+    first_word = bg[0]
+    probability = bigram_freq[bg] / unigrams[first_word]
+    print(f"P({bg[1]} | {bg[0]}) = {probability:.3f}")
+
+# -----------------------------
+# 7. Visualize Word Frequencies
+# -----------------------------
+words = list(word_freq.keys())
+counts = list(word_freq.values())
+
+plt.figure(figsize=(8,5))
+plt.bar(words, counts)
+plt.title("Word Frequency Distribution")
+plt.xlabel("Words")
+plt.ylabel("Frequency")
+plt.xticks(rotation=45)
+plt.show()
