@@ -1,0 +1,41 @@
+from collections import Counter
+import nltk
+from nltk import CFG, word_tokenize
+from nltk.parse import ChartParser
+from nltk.util import ngrams
+!pip install nltk
+nltk.download('punkt')
+nltk.download('punkt_tab') 
+text = """
+I love NLP.
+I love Python.
+I study NLP.
+We study Python.
+You love NLP.
+"""
+tokens = word_tokenize(text)
+tokens = [word for word in tokens if word.isalpha()]
+unigrams = Counter(tokens)
+bigrams = Counter(ngrams(tokens, 2))
+
+print("UNIGRAM FREQUENCY")
+for word, count in unigrams.items():
+    print(f"{word} : {count}")
+
+print("\nBIGRAM FREQUENCY")
+for bg, count in bigrams.items():
+    print(f"{bg[0]} {bg[1]} : {count}")
+grammar = CFG.fromstring("""
+S -> NP VP
+NP -> Pronoun | Noun
+VP -> Verb NP | Verb
+Pronoun -> 'I'
+Noun -> 'NLP' | 'Python'
+Verb -> 'love' | 'study'
+""")
+parser = ChartParser(grammar)
+sentence = "I love NLP".split()
+print("\nPARSE TREE")
+for tree in parser.parse(sentence):
+    print(tree)
+    tree.pretty_print()
