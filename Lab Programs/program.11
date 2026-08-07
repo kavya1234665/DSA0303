@@ -1,0 +1,33 @@
+grammar = {
+    "S": [["NP", "VP"]],
+    "NP": [["John"], ["Mary"]],
+    "VP": [["runs"], ["eats"]]
+}
+
+sentence = input("Enter a sentence: ").split()
+
+def parse(symbol, words):
+    if not words:
+        return False
+
+    if symbol not in grammar:
+        return words[0] == symbol and len(words) == 1
+
+    for rule in grammar[symbol]:
+        if len(rule) == len(words):
+            matched = True
+            for r, w in zip(rule, words):
+                if r in grammar:
+                    if not parse(r, [w]):
+                        matched = False
+                else:
+                    if r != w:
+                        matched = False
+            if matched:
+                return True
+    return False
+
+if parse("S", sentence):
+    print("Sentence Accepted")
+else:
+    print("Sentence Rejected")
