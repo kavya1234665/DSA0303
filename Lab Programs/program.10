@@ -1,0 +1,24 @@
+sentence = input("Enter a sentence: ").split()
+tags = []
+
+for word in sentence:
+    tags.append("NOUN")
+for i in range(len(sentence)):
+    word = sentence[i].lower()
+
+    if word in ["is", "am", "are", "was", "were"]:
+        tags[i] = "VERB"
+
+    elif word.endswith("ing"):
+        tags[i] = "VERB"
+
+    elif word in ["the", "a", "an"]:
+        tags[i] = "DET"
+
+    elif word.endswith("ly"):
+        tags[i] = "ADV"
+
+print("\nTransformation-Based POS Tags:")
+
+for word, tag in zip(sentence, tags):
+    print(word, "->", tag)
