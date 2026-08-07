@@ -1,0 +1,18 @@
+
+pos_prob = {
+    "I": "PRON",
+    "eat": "VERB",
+    "apple": "NOUN",
+    "an": "DET",
+    "the": "DET",
+    "is": "VERB",
+    "good": "ADJ"
+}
+
+sentence = input("Enter a sentence: ").split()
+
+print("\nPOS Tags:")
+
+for word in sentence:
+    tag = pos_prob.get(word, "NOUN")   # Default tag = NOUN
+    print(word, "->", tag)
