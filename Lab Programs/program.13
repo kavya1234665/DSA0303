@@ -1,0 +1,21 @@
+sentence = input("Enter sentence: ").split()
+if sentence == ["John", "runs"]:
+    print("""
+        S
+       / \\
+     NP   VP
+     |     |
+   John  runs
+""")
+
+elif sentence == ["Mary", "eats"]:
+    print("""
+        S
+       / \\
+     NP   VP
+     |     |
+   Mary  eats
+""")
+
+else:
+    print("Parse Tree Not Found")
