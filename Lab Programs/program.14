@@ -1,0 +1,21 @@
+sentence = input("Enter sentence: ").split()
+
+agreement = {
+    "He": "runs",
+    "She": "runs",
+    "John": "runs",
+    "They": "run",
+    "We": "run",
+    "I": "run"
+}
+
+if len(sentence) == 2:
+    subject = sentence[0]
+    verb = sentence[1]
+
+    if subject in agreement and agreement[subject] == verb:
+        print("Sentence is Grammatically Correct")
+    else:
+        print("Subject-Verb Agreement Error")
+else:
+    print("Invalid Sentence")
