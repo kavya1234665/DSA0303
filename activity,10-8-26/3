@@ -1,0 +1,19 @@
+sentence = "The boy is playing football"
+words = sentence.split()
+tags = ["NN", "NN", "NN", "NN", "NN"]
+print("Initial Tags:")
+print(list(zip(words, tags)))
+
+for i, word in enumerate(words):
+
+    if word.lower() in ["the", "a", "an"]:
+        tags[i] = "DT"
+
+    elif word.lower() in ["is", "am", "are", "was", "were"]:
+        tags[i] = "VB"
+
+    elif word.endswith("ing"):
+        tags[i] = "VBG"
+
+print("\nAfter Transformation:")
+print(list(zip(words, tags)))
