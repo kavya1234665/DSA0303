@@ -1,0 +1,14 @@
+import nltk
+from nltk.corpus import brown
+from nltk.tag import UnigramTagger
+nltk.download('brown')
+nltk.download('universal_tagset')
+data = brown.tagged_sents(tagset='universal')
+tagger = UnigramTagger(data)
+sentence = "The boy is playing football"
+
+words = sentence.split()
+
+result = tagger.tag(words)
+
+print(result)
