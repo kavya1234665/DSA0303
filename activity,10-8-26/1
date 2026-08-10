@@ -1,0 +1,22 @@
+import nltk
+from nltk.tokenize import word_tokenize
+nltk.download('punkt')
+nltk.download('punkt_tab')
+sentence = "The boy is playing football"
+words = word_tokenize(sentence)
+def rule_based_tagger(words):
+    tags = []
+    for word in words:
+        if word.lower() in ["the", "a", "an"]:
+            tag = "DT"          # Determiner
+        elif word.lower() in ["is", "am", "are", "was", "were"]:
+            tag = "VB"          # Verb
+        elif word.endswith("ing"):
+            tag = "VBG"         # Verb + ing
+        elif word.lower() in ["boy", "football", "girl", "school"]:
+            tag = "NN"          # Noun
+        else:
+            tag = "NN"
+        tags.append((word, tag))
+    return tags
+print(rule_based_tagger(words))
