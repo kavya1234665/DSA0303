@@ -1,0 +1,24 @@
+from collections import defaultdict, Counter
+data = [
+    ("the", "DT"),
+    ("dog", "NN"),
+    ("runs", "VB"),
+    ("the", "DT"),
+    ("cat", "NN"),
+    ("runs", "VB")
+]
+tag_word_count = defaultdict(Counter)
+tag_count = Counter()
+
+for word, tag in data:
+    tag_word_count[tag][word] += 1
+    tag_count[tag] += 1
+
+
+word = "dog"
+tag = "NN"
+
+probability = tag_word_count[tag][word] / tag_count[tag]
+
+print("Emission Probability:")
+print("P(", word, "|", tag, ") =", probability)
