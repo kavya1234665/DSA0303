@@ -1,0 +1,16 @@
+from collections import Counter
+
+tags = ["DT", "NN", "VB", "DT", "NN", "VB"]
+
+transitions = list(zip(tags, tags[1:]))
+
+transition_count = Counter(transitions)
+tag_count = Counter(tags)
+
+from_tag = "DT"
+to_tag = "NN"
+
+probability = transition_count[(from_tag, to_tag)] / tag_count[from_tag]
+
+print("Transition Probability:")
+print("P(", to_tag, "|", from_tag, ") =", probability)
