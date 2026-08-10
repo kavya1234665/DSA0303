@@ -1,0 +1,19 @@
+from collections import Counter
+
+sentence = "I love NLP I love Python I like NLP"
+
+words = sentence.lower().split()
+
+
+bigrams = list(zip(words, words[1:]))
+
+bigram_count = Counter(bigrams)
+word_count = Counter(words)
+
+word1 = "i"
+word2 = "love"
+
+probability = bigram_count[(word1, word2)] / word_count[word1]
+
+print("Conditional Probability:")
+print("P(", word2, "|", word1, ") =", probability)
