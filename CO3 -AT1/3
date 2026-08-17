@@ -1,0 +1,47 @@
+def sentence_probability(sentence):
+
+    grammar = {
+        "S": {
+            ("NP", "VP"): 1.0
+        },
+        "NP": {
+            "John": 0.6,
+            "Mary": 0.4
+        },
+        "VP": {
+            "runs": 0.5,
+            "walks": 0.5
+        }
+    }
+
+    words = sentence.split()
+
+    # Sentence must contain exactly two words
+    if len(words) != 2:
+        return 0.0
+
+    subject, verb = words
+
+    # Check whether words exist in grammar
+    if subject not in grammar["NP"]:
+        return 0.0
+
+    if verb not in grammar["VP"]:
+        return 0.0
+
+    # Probability calculation
+    p_s = grammar["S"][("NP", "VP")]
+    p_np = grammar["NP"][subject]
+    p_vp = grammar["VP"][verb]
+
+    probability = p_s * p_np * p_vp
+
+    return probability
+
+
+# Main program
+sentence = input("Enter a two-word sentence: ")
+
+probability = sentence_probability(sentence)
+
+print("Sentence Probability:", probability)
