@@ -1,0 +1,64 @@
+def parse_cfg(sentence):
+    words = sentence.lower().split()
+
+    determiners = {"the", "a"}
+    nouns = {"student", "teacher", "book"}
+    verbs = {"reads", "likes"}
+
+    # Grammar requires exactly 5 words:
+    # S -> NP VP
+    # NP -> Det N
+    # VP -> V NP
+    if len(words) != 5:
+        return "Invalid Sentence"
+
+    det1, noun1, verb, det2, noun2 = words
+
+    # Check first NP
+    if det1 not in determiners or noun1 not in nouns:
+        return "Invalid Sentence"
+
+    # Check verb
+    if verb not in verbs:
+        return "Invalid Sentence"
+
+    # Check second NP
+    if det2 not in determiners or noun2 not in nouns:
+        return "Invalid Sentence"
+
+    # Construct parse tree
+    parse_tree = {
+        "S": [
+            {
+                "NP": [
+                    {"Det": det1},
+                    {"N": noun1}
+                ]
+            },
+            {
+                "VP": [
+                    {"V": verb},
+                    {
+                        "NP": [
+                            {"Det": det2},
+                            {"N": noun2}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+    return parse_tree
+
+
+# Main program
+sentence = input("Enter a sentence: ")
+
+result = parse_cfg(sentence)
+
+if result == "Invalid Sentence":
+    print("Invalid Sentence")
+else:
+    print("Valid Parse Tree:")
+    print(result)
