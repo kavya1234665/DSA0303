@@ -1,0 +1,13 @@
+pip install openai
+from openai import OpenAI
+
+client = OpenAI(api_key="YOUR_API_KEY")
+
+prompt = "Write a short paragraph about artificial intelligence."
+
+response = client.responses.create(
+    model="gpt-5",
+    input=prompt
+)
+
+print(response.output_text)
