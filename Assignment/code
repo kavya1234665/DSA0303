@@ -1,0 +1,268 @@
+# ============================================================
+# NLP-BASED TECHNICAL DOCUMENTATION & DEVELOPER SUPPORT QA
+# ============================================================
+
+!pip install -q pandas pyarrow requests scikit-learn matplotlib
+
+import pandas as pd
+import numpy as np
+import requests, re, time
+import matplotlib.pyplot as plt
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import precision_score, recall_score, f1_score
+
+
+# 1. LOAD DATASET AUTOMATICALLY
+url = "https://datasets-server.huggingface.co/parquet?dataset=koutch/staqc"
+info = requests.get(url).json()
+
+file = next(x for x in info["parquet_files"]
+            if x["config"] == "mca_python" and x["split"] == "train")
+
+df = pd.read_parquet(file["url"])
+df = df[["question_id", "question", "snippet"]].dropna()
+df = df.drop_duplicates("question")
+df = df.sample(min(150, len(df)), random_state=42).reset_index(drop=True)
+
+
+# 2. CATEGORY CLASSIFICATION
+def category(q):
+    q = q.lower()
+
+    if any(x in q for x in ["api", "http", "request", "json", "rest"]):
+        return "API"
+    if any(x in q for x in ["file", "csv", "folder", "directory"]):
+        return "File Handling"
+    if any(x in q for x in ["error", "exception", "traceback", "fail"]):
+        return "Error Handling"
+    if any(x in q for x in ["sql", "database", "mysql", "sqlite", "query"]):
+        return "Database"
+
+    return "Python Programming"
+
+
+df["category"] = df["question"].apply(category)
+df["answer"] = "A suitable technical solution is:\n" + df["snippet"]
+
+
+# 3. TEXT PREPROCESSING
+stop = {"the","a","an","is","are","to","of","in","on","for",
+        "and","or","how","what","why","can","i","do","does","using"}
+
+def preprocess(text):
+    text = re.sub(r"[^a-zA-Z0-9\s]", " ", str(text).lower())
+    return " ".join(x for x in text.split() if x not in stop)
+
+df["processed"] = df["question"].apply(preprocess)
+
+
+# 4. SHOW DATASET
+print("Dataset Size:", len(df))
+display(df[["question_id","question","category","answer"]].head(10))
+
+
+# 5. TF-IDF MODEL
+vectorizer = TfidfVectorizer(ngram_range=(1,2))
+X = vectorizer.fit_transform(df["processed"])
+
+
+# 6. LSA MODEL
+n = min(25, X.shape[0]-1, X.shape[1]-1)
+lsa = TruncatedSVD(n_components=n, random_state=42)
+X_lsa = lsa.fit_transform(X)
+
+
+# 7. QUERY CLASSIFICATION
+def intent(q):
+    q = q.lower()
+
+    if q.startswith(("how","can i","how do")):
+        return "HOW-TO"
+    if "why" in q:
+        return "WHY"
+    if "what" in q or "which" in q:
+        return "WHAT"
+    if any(x in q for x in ["error","exception","fails"]):
+        return "ERROR"
+
+    return "GENERAL"
+
+
+# 8. RETRIEVAL FUNCTIONS
+def search(query, method="tfidf", k=3):
+
+    q = vectorizer.transform([preprocess(query)])
+
+    if method == "lsa":
+        q = lsa.transform(q)
+        scores = cosine_similarity(q, X_lsa)[0]
+    else:
+        scores = cosine_similarity(q, X)[0]
+
+    ids = scores.argsort()[::-1][:k]
+    return [(i, scores[i]) for i in ids]
+
+
+# 9. ANSWER GENERATION
+def answer(query, method="tfidf"):
+
+    start = time.perf_counter()
+    result = search(query, method, 1)
+    latency = (time.perf_counter()-start)*1000
+
+    i, score = result[0]
+
+    return {
+        "question": query,
+        "intent": intent(query),
+        "category": df.iloc[i]["category"],
+        "matched": df.iloc[i]["question"],
+        "answer": df.iloc[i]["answer"],
+        "confidence": score,
+        "latency": latency
+    }
+
+
+# 10. DEMONSTRATION
+queries = [
+    "How do I read a file in Python?",
+    "How do I handle an exception in Python?",
+    "How can I make a request using Python?"
+]
+
+for q in queries:
+    r = answer(q)
+
+    print("\n" + "-"*60)
+    print("Query:", r["question"])
+    print("Intent:", r["intent"])
+    print("Category:", r["category"])
+    print("Matched:", r["matched"])
+    print("Confidence:", round(r["confidence"],4))
+    print("Latency:", round(r["latency"],3), "ms")
+    print("Answer:", r["answer"][:400])
+
+
+# 11. EVALUATION
+test = df.sample(min(30,len(df)), random_state=100)
+
+def short_query(q):
+    q = re.sub(r"\b(how|what|why|can|i|do|does|is|are)\b",
+               "", q.lower())
+    return " ".join(q.split()[:12])
+
+true, pred, correct = [], [], 0
+
+for _, row in test.iterrows():
+
+    q = short_query(row["question"])
+    result = search(q, "tfidf", 5)
+
+    ids = [x[0] for x in result]
+    top = result[0][0]
+
+    correct += row.name in ids
+    true.append(row["category"])
+    pred.append(df.iloc[top]["category"])
+
+accuracy = correct / len(test)
+precision = precision_score(true,pred,average="macro",zero_division=0)
+recall = recall_score(true,pred,average="macro",zero_division=0)
+f1 = f1_score(true,pred,average="macro",zero_division=0)
+
+metrics = pd.DataFrame({
+    "Metric":["Accuracy","Precision","Recall","F1"],
+    "Score":[accuracy,precision,recall,f1]
+})
+
+print("\nEVALUATION RESULTS")
+display(metrics)
+
+
+# 12. GRAPH 1 - CATEGORY DISTRIBUTION
+plt.figure(figsize=(8,4))
+df["category"].value_counts().plot(kind="bar")
+plt.title("Technical QA Dataset - Category Distribution")
+plt.xlabel("Category")
+plt.ylabel("Questions")
+plt.xticks(rotation=30)
+plt.tight_layout()
+plt.show()
+
+
+# 13. GRAPH 2 - EVALUATION METRICS
+plt.figure(figsize=(8,4))
+plt.bar(
+    metrics["Metric"],
+    metrics["Score"]
+)
+plt.title("QA System Evaluation Metrics")
+plt.xlabel("Metric")
+plt.ylabel("Score")
+plt.ylim(0,1)
+plt.tight_layout()
+plt.show()
+
+
+# 14. GRAPH 3 - QUERY CONFIDENCE
+confidence = [
+    answer(q)["confidence"] for q in queries
+]
+
+plt.figure(figsize=(8,4))
+plt.bar(
+    ["Query 1","Query 2","Query 3"],
+    confidence
+)
+plt.title("Query Confidence Scores")
+plt.xlabel("Test Query")
+plt.ylabel("Cosine Similarity")
+plt.ylim(0,1)
+plt.tight_layout()
+plt.show()
+
+
+# 15. SIMPLE WORD SENSE DISAMBIGUATION
+def wsd(sentence):
+
+    words = preprocess(sentence).split()
+
+    auth = sum(x in words for x in
+               ["login","security","authentication","credential"])
+
+    parser = sum(x in words for x in
+                 ["parser","compiler","syntax","language"])
+
+    return "Authentication Token" if auth >= parser else "Programming Token"
+
+
+print("\nWSD Example:")
+print(
+    wsd("The authentication token expired during login")
+)
+
+
+# 16. SIMPLE DISCOURSE RESOLUTION
+def resolve(previous, current):
+
+    for word in ["it","this","that","they","them"]:
+        if word in current.lower().split():
+            return current.lower().replace(word, previous)
+
+    return current
+
+
+print("\nDiscourse Example:")
+print(
+    resolve(
+        "Python file handling",
+        "How can I read it?"
+    )
+)
+
+print("\n" + "="*60)
+print("SYSTEM EXECUTION COMPLETED")
+print("="*60)
